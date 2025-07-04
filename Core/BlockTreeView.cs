@@ -118,7 +118,7 @@ namespace DevTreeview.Core
             {
                 Children.Add(new BlockTreeView()
                 {
-                    Name = "输入",
+                    Name = "输入 0",
                     BlockType = BlockType.Input,
                 });
             }
@@ -127,7 +127,7 @@ namespace DevTreeview.Core
             {
                 Children.Add(new BlockTreeView()
                 {
-                    Name = "输出",
+                    Name = "输出 26",
                     BlockType = BlockType.Output
                 });
             }

@@ -1,8 +1,8 @@
 ﻿using DevExpress.Xpf.Grid;
 using DevExpress.Xpf.Grid.TreeView;
+using DevExpress.XtraTreeList;
 using DevTreeview.Adorner;
 using DevTreeview.Core;
-using DevTreeview.Extenstions;
 using System.Diagnostics;
 using System.Windows;
 using Point = System.Windows.Point;
@@ -19,7 +19,6 @@ namespace DevTreeview
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
         }
-
 
         #region Dev DragAndDrop
         object startItem;
@@ -48,7 +47,7 @@ namespace DevTreeview
             endItem = e.TargetRecord;
             e.Handled = true;
 
-            var rowControls = TreeViewRowControlHelper.FindVisualChildren<RowControl>(treeList).ToList();
+            var rowControls = TreeViewRowControlHelper.GetCachedRowControls(treeList).ToList();
             int startIndex = rowControls.FindIndex(row =>
             {
                 if (row.DataContext is TreeViewRowData rowData)
@@ -77,7 +76,6 @@ namespace DevTreeview
             } 
         }
         #endregion
-
         private void treeList_Loaded(object sender, RoutedEventArgs e)
         {
             ExpandAllNodes(treeList.Nodes);
@@ -102,5 +100,39 @@ namespace DevTreeview
         {
             TreeNodeAdornerHelper.ClearAllAdorners(treeList);
         }
+
+        private void treeList_NodeCollapsed(object sender, DevExpress.Xpf.Grid.TreeList.TreeViewNodeEventArgs e)
+        {
+            treeList.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Redraw(e.Node,false);
+
+            }), System.Windows.Threading.DispatcherPriority.Background);
+
+        }
+
+        private void treeList_NodeExpanded(object sender, DevExpress.Xpf.Grid.TreeList.TreeViewNodeEventArgs e)
+        {
+            treeList.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Redraw(e.Node,true);
+
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void Redraw(TreeListNode node,bool isExpanded)
+        {
+            var allRowControls = TreeViewRowControlHelper.GetCachedRowControls(treeList);
+            var expanderRowControl = allRowControls.FirstOrDefault(r =>
+            {
+                var rowData = r.DataContext as TreeViewRowData;
+                return rowData?.Node == node;
+            });
+            var exPanderChildNodes = TreeViewRowControlHelper.GetAllChildRowControls(treeList, node);
+            TreeNodeAdornerHelper.RedrawAdorners(treeList, exPanderChildNodes, expanderRowControl, isExpanded);
+        }
+
+
+
     }
 }

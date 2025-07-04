@@ -39,6 +39,8 @@
                 DropRecord="treeList_DropRecord"
                 ItemsSource="{Binding Blocks.Children}"
                 Loaded="treeList_Loaded"
+                NodeCollapsing="treeList_NodeCollapsed"
+                NodeExpanding="treeList_NodeExpanded"
                 ShowBorder="False"
                 ShowDragDropHint="False"
                 ShowExpandButtons="True"

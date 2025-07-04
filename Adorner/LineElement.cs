@@ -32,15 +32,8 @@ namespace DevTreeview.Adorner
         private TranslateTransform _transform;
         public Guid AdornerGuid;
 
-
         [JsonProperty]
         public List<PointElement> PointElements;
-
-        public LineElement()
-        {
-
-        }
-
 
         public LineElement(IEnumerable<PointElement> pointElements, System.Windows.Documents.Adorner adorner)
         {

@@ -3,6 +3,7 @@ using DevExpress.XtraTreeList;
 using DevTreeview.Adorner;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -85,14 +86,66 @@ namespace DevTreeview.Core
             }
 
             adorners.Clear();
-
             // 清空附加属性
             SetTreeNodeAdorner(treeViewControl, null);
         }
 
 
+        public static void RedrawAdorners
+            (
+            TreeViewControl treeViewControl,
+            IEnumerable<RowControl> expanderChildren ,
+            RowControl patientRowControl,
+            bool isExpandar
+            )
+        {
+            var adorners =  GetTreeNodeAdorner(treeViewControl);
+            if(adorners == null || !adorners.Any()) return;
+            Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(expanderChildren?.FirstOrDefault()));
+            Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(expanderChildren?.LastOrDefault()));
+
+            var startIndex = TreeViewRowControlHelper.GetRowControlIndex(treeViewControl, expanderChildren?.FirstOrDefault());
+            var endIndex = TreeViewRowControlHelper.GetRowControlIndex(treeViewControl, expanderChildren?.LastOrDefault());
 
 
+            foreach (var adorner in adorners)
+            {
+                if (adorner is TreeNodeAdorner treeNodeAdorner)
+                {
+                    var startRootControl = TreeViewRowControlHelper.GetRootRowControl(treeNodeAdorner.startRowControl.RowControl,treeViewControl);
+                    var endRootControl = TreeViewRowControlHelper.GetRootRowControl(treeNodeAdorner.endRowControl.RowControl,treeViewControl);
+
+                    // 装饰器  完全包含 折叠项
+                    if (treeNodeAdorner.StartRowControlIndex < startIndex 
+                        && treeNodeAdorner.EndRowControlIndex > endIndex)
+                    {
+                        treeNodeAdorner.ReDraw(null, isExpandar ? null : endRootControl);
+                    }
+                    // 折叠项包含 装饰器尾部
+                    else if (treeNodeAdorner.EndRowControlIndex >= startIndex 
+                        && treeNodeAdorner.EndRowControlIndex <=endIndex)
+                    {
+
+                        if (treeNodeAdorner.StartRowControlIndex >= startIndex
+                        && treeNodeAdorner.StartRowControlIndex <= endIndex)
+                        {
+                            treeNodeAdorner.ReDrawEmpty(isExpandar);
+                        }
+                        else
+                        {
+                            treeNodeAdorner.ReDraw(null, isExpandar ? null : endRootControl);
+                        }              
+                    }
+                    // 折叠项包含 装饰器头部
+                    else if (treeNodeAdorner.StartRowControlIndex >= startIndex
+                        && treeNodeAdorner.StartRowControlIndex <= endIndex)
+                    {
+
+                        treeNodeAdorner.ReDraw(isExpandar ? null : startRootControl, null);
+                    }
+                }
+            }
+        }
 
     }
 }

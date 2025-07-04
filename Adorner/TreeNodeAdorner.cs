@@ -1,9 +1,10 @@
 ﻿using DevExpress.Xpf.Grid;
+using DevExpress.Xpf.Grid.TreeView;
 using DevExpress.Xpf.Printing;
 using DevTreeview.Core;
-using DevTreeview.Extenstions;
 using Newtonsoft.Json;
 using System.Collections;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -19,8 +20,11 @@ namespace DevTreeview.Adorner
         private double OffSetX = 20;
         private double LineSpace = 9;
         private bool ReDrawing = false;
-        private RowControlProperty startRowControl;
-        private RowControlProperty endRowControl;
+        public RowControlProperty startRowControl;
+        public RowControlProperty endRowControl;
+        public int StartRowControlIndex => TreeViewRowControlHelper.GetRowControlIndex(treeViewControl, startRowControl.RowControl);
+
+        public int EndRowControlIndex => TreeViewRowControlHelper.GetRowControlIndex(treeViewControl,endRowControl.RowControl);
 
         [JsonProperty]
         public double LinkMaxWidth;
@@ -40,22 +44,48 @@ namespace DevTreeview.Adorner
             InvalidateVisual();
         }
 
-        private void CalAndDrawLinePoint()
+        public void ReDraw(RowControl startNode = null, RowControl endNode = null)
         {
+            ReDrawing = true;
+            ClearLines();
+            CalAndDrawLinePoint(startNode, endNode);
+            InvalidateVisual();
+        }
+
+        public void ReDrawEmpty(bool isExpandar)
+        {
+            ReDrawing = true;
+            ClearLines();
+            if (isExpandar)
+            {
+                CalAndDrawLinePoint(startRowControl.RowControl, endRowControl.RowControl);
+            }
+
+            InvalidateVisual();
+        }
+
+
+        private void CalAndDrawLinePoint(RowControl reDrawStart = null, RowControl reDrawEnd = null)
+        {
+            var sRowControl = reDrawStart == null ? startRowControl.RowControl : reDrawStart;
+            var eRowControl = reDrawEnd == null ? endRowControl.RowControl : reDrawEnd;
+
+            Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(sRowControl));
+            Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(eRowControl));
+
             var pointElements = new List<PointElement>();
             Point adornedElementPosition = new Point();
             Point startPoint = new Point();
             Point endPoint = new Point();
+            GetTreeViewItemEndPoint(sRowControl, ref startPoint);
+            GetTreeViewItemEndPoint(eRowControl, ref endPoint);
 
-            GetTreeViewItemEndPoint(startRowControl.RowControl, ref startPoint);
-            GetTreeViewItemEndPoint(endRowControl.RowControl, ref endPoint);
+            Trace.WriteLine($"{TreeViewRowControlHelper.GetRowControlContent(endRowControl.RowControl)} :::::::::: endPoint.X: {endPoint.X}, endPoint.Y: {endPoint.Y} ");
 
             Point rightPoint;
-            StartToEndRelativeMaxPoint(startRowControl, endRowControl, ref rightPoint);
+            StartToEndRelativeMaxPoint(sRowControl, eRowControl, ref rightPoint);
             LinkMaxWidth = new List<Double> { startPoint.X, endPoint.X, rightPoint.X }.Max();
-
             var startLink = LinkMaxWidth + OffSetX;
-
             if (AdornedElementToTreeViewPoint(ref adornedElementPosition))
             {
                 //开始横线
@@ -64,7 +94,6 @@ namespace DevTreeview.Adorner
                     StartPoint = new Point(startPoint.X, startPoint.Y).ToRelativePostion(adornedElementPosition),
                     EndPoint = new Point(startLink, startPoint.Y).ToRelativePostion(adornedElementPosition),
                     //isTemp = IsTemp,
-
                 });
 
                 //结束横线
@@ -84,17 +113,14 @@ namespace DevTreeview.Adorner
                     //isTemp = IsTemp,
                 });
             }
-
             DrawLineElements(pointElements);
         }
 
-        private void StartToEndRelativeMaxPoint(RowControlProperty start, RowControlProperty end, ref Point maxPoint)
+        private void StartToEndRelativeMaxPoint(RowControl start, RowControl end, ref Point maxPoint)
         {
-            var rowLists = TreeViewRowControlHelper.FindRowControlsBetween(treeViewControl, start.RowControl, end.RowControl, true);
-
+            var rowLists = TreeViewRowControlHelper.FindRowControlsBetween(treeViewControl, start, end, true);
             double maxX = 0;
             Point current = new Point();
-
             foreach (var row in rowLists)
             {
                 if (GetTreeViewItemEndPoint(row, ref current))
@@ -108,12 +134,11 @@ namespace DevTreeview.Adorner
             }
         }
 
-
         /// <summary>
         /// RowControl里面文本最右中心点坐标
         /// </summary>
         /// <param name="rowControl"></param>
-        /// <param name="Point"></param>
+        /// <param name="point"></param>
         /// <returns></returns>
         private bool GetTreeViewItemEndPoint(RowControl rowControl, ref Point point)
         {
@@ -125,6 +150,8 @@ namespace DevTreeview.Adorner
             if (textBlock.ActualWidth == 0 || textBlock.ActualHeight == 0)
             {
                 textBlock.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+
+                return GetTreeViewItemEndPoint(TreeViewRowControlHelper.GetRootRowControl(rowControl,treeViewControl),ref point);
             }
 
             double width = textBlock.ActualWidth;
@@ -154,7 +181,6 @@ namespace DevTreeview.Adorner
             return true;
         }
 
-
         private bool GetTreeViewItemEndPoint(BlockTreeView BlockTreeView, RowControl rowControl, ref Point Point)
         {
             //var textBlock = BlockTreeHelper.FindChild<TextBlock>(rowControl);
@@ -170,9 +196,6 @@ namespace DevTreeview.Adorner
             return true;
         }
 
-
-
-
         public void DrawLineElements(IEnumerable<PointElement> points)
         {
             List<PointElement> PointElements = new List<PointElement>();
@@ -180,7 +203,6 @@ namespace DevTreeview.Adorner
             lineElement.DisposeAdorner -= DisposeLineElement;
             lineElement.DisposeAdorner += DisposeLineElement;
             lineElements.Add(lineElement);
-
             //if (StartTreeView != null)
             //{
             //    if (ReDrawing)
@@ -237,7 +259,6 @@ namespace DevTreeview.Adorner
             InvalidateVisual();
         }
 
-
         #region override
         protected override int VisualChildrenCount => lineElements.Count;
 
@@ -286,11 +307,14 @@ namespace DevTreeview.Adorner
 
     public class RowControlProperty
     {
-        public RowControl RowControl { get; set; }
+        public RowControl RowControl 
+        { 
+            get; 
+            set; 
+        }
         public double TextWidth { get; set; }
         public double TextHeight { get; set; }
         public String RowContent{ get; set; }
-
 
         public RowControlProperty(RowControl rowControl,string rowContent ,double textWidht, double textHeight)
         {
@@ -305,9 +329,4 @@ namespace DevTreeview.Adorner
             return $"{RowContent} Height: {TextHeight}  Width: {TextWidth}";
         }
     }
-
-
-
-
-
 }
