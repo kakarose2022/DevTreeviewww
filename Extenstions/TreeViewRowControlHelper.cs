@@ -23,11 +23,6 @@ public static class TreeViewRowControlHelper
         return found;
     }
 
-
-
-
-
-
     public static List<RowControl> GetCachedRowControls(TreeViewControl treeViewControl)
     {
         if (treeViewControl == null)
@@ -222,7 +217,10 @@ public static class TreeViewRowControlHelper
 
     public static string ToControlContent(this RowControl rowControl)
     {
-
+       if(rowControl == null)
+        {
+            return string.Empty;
+        }
        var dc= rowControl.DataContext as TreeViewRowData;
         return dc.Node.Content.ToString();
     }

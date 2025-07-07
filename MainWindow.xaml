@@ -45,9 +45,7 @@
                 ShowDragDropHint="False"
                 ShowExpandButtons="True"
                 ShowSearchPanel="False"
-                StartRecordDrag="treeList_StartRecordDrag"
-                VirtualizingPanel.IsVirtualizing="False"
-                VirtualizingPanel.VirtualizationMode="Standard">
+                StartRecordDrag="treeList_StartRecordDrag">
 
                 <dxg:TreeViewControl.NodeContentTemplate>
                     <DataTemplate>

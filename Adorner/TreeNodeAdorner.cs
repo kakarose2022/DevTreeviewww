@@ -44,62 +44,29 @@ namespace DevTreeview.Adorner
             InvalidateVisual();
         }
 
-        public void ReDraw(RowControl startNode = null, RowControl endNode = null)
+        public void ReDrawByNode(TreeListNode startNode = null, TreeListNode endNode = null)
         {
             ReDrawing = true;
             ClearLines();
-            CalAndDrawLinePoint(startNode, endNode);
+
+            var startControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startNode);
+            var endControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, endNode);
+            Trace.WriteLine($"ReDraw  startControl  {startControl.ToControlContent()}  =>  {endControl.ToControlContent()}");
+            CalAndDrawLinePoint(startControl, endControl);
             InvalidateVisual();
         }
-
-        public void ReDrawEmpty(bool isExpandar)
-        {
-            ReDrawing = true;
-            ClearLines();
-            if (isExpandar)
-            {
-                CalAndDrawLinePoint(startRowControl.RowControl, endRowControl.RowControl);
-            }
-
-            InvalidateVisual();
-        }
-
 
         private void CalAndDrawLinePoint(RowControl reDrawStart = null, RowControl reDrawEnd = null)
         {
             var sRowControl = reDrawStart == null ? startRowControl.RowControl : reDrawStart;
             var eRowControl = reDrawEnd == null ? endRowControl.RowControl : reDrawEnd;
-
-            var aaa = startRowControl.RowControl.ToControlContent();
-            var bbb = endRowControl.RowControl.ToControlContent();
-
-
-
-            var aaaa = startRowControl.TreeListNode;
-            var bbbb = endRowControl.TreeListNode;
-            var  startControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, aaaa);
-            var endControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, bbbb);
-            var ccc = startControl.ToControlContent();
-            var ddd = endControl.ToControlContent();
-
-
-
-
-            var a = sRowControl.ToControlContent();
-            var b = eRowControl.ToControlContent();
-            var aa = StartRowControlIndex;
-            var bb = EndRowControlIndex;
-
-
-
+ 
             var pointElements = new List<PointElement>();
             Point adornedElementPosition = new Point();
             Point startPoint = new Point();
             Point endPoint = new Point();
             GetTreeViewItemEndPoint(sRowControl, ref startPoint);
             GetTreeViewItemEndPoint(eRowControl, ref endPoint);
-
-            //Trace.WriteLine($"{TreeViewRowControlHelper.GetRowControlContent(endRowControl.RowControl)} :::::::::: endPoint.X: {endPoint.X}, endPoint.Y: {endPoint.Y} ");
 
             Point rightPoint;
             StartToEndRelativeMaxPoint(sRowControl, eRowControl, ref rightPoint);

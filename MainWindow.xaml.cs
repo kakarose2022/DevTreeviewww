@@ -84,10 +84,6 @@ namespace DevTreeview
         private void treeList_Loaded(object sender, RoutedEventArgs e)
         {
             ExpandAllNodes(treeList.Nodes);
-
-
-
-
         }
 
         private void ExpandAllNodes(TreeListNodeCollection nodes)
@@ -109,7 +105,6 @@ namespace DevTreeview
         {
             TreeNodeAdornerHelper.ClearAllAdorners(treeList);
         }
-
         private void treeList_NodeCollapsed(object sender, DevExpress.Xpf.Grid.TreeList.TreeViewNodeEventArgs e)
         {
             treeList.Dispatcher.BeginInvoke(new Action(() =>
@@ -145,8 +140,5 @@ namespace DevTreeview
             }
             TreeNodeAdornerHelper.RedrawAdorners(treeList, exPanderChildNodes, expanderRowControl, isExpanded);
         }
-
-
-
     }
 }
