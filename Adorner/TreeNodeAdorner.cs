@@ -73,6 +73,18 @@ namespace DevTreeview.Adorner
             var aaa = startRowControl.RowControl.ToControlContent();
             var bbb = endRowControl.RowControl.ToControlContent();
 
+
+
+            var aaaa = startRowControl.TreeListNode;
+            var bbbb = endRowControl.TreeListNode;
+            var  startControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, aaaa);
+            var endControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, bbbb);
+            var ccc = startControl.ToControlContent();
+            var ddd = endControl.ToControlContent();
+
+
+
+
             var a = sRowControl.ToControlContent();
             var b = eRowControl.ToControlContent();
             var aa = StartRowControlIndex;
@@ -319,13 +331,18 @@ namespace DevTreeview.Adorner
             get; 
             set; 
         }
+
+        public TreeListNode TreeListNode { get; set; }
+
+
         public double TextWidth { get; set; }
         public double TextHeight { get; set; }
         public String RowContent{ get; set; }
 
-        public RowControlProperty(RowControl rowControl,string rowContent ,double textWidht, double textHeight)
+        public RowControlProperty(RowControl rowControl, TreeListNode node, string rowContent ,double textWidht, double textHeight)
         {
             RowControl = rowControl;
+            TreeListNode = node;
             RowContent = rowContent;
             TextWidth = textWidht;
             TextHeight = textHeight;

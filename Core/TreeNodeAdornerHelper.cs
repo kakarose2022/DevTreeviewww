@@ -105,141 +105,125 @@ namespace DevTreeview.Core
             //Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(expanderChildren?.FirstOrDefault()));
             //Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(expanderChildren?.LastOrDefault()));
 
-            var startIndex = TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl, expanderChildren?.FirstOrDefault());
-            var endIndex = TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl, expanderChildren?.LastOrDefault());
-            foreach (var adorner in adorners)
-            {
-                if (adorner is TreeNodeAdorner treeNodeAdorner)
-                {
-                    var startRootControl = TreeViewRowControlHelper.GetRootRowControl(treeNodeAdorner.startRowControl.RowControl, treeViewControl);
-                    var endRootControl = TreeViewRowControlHelper.GetRootRowControl(treeNodeAdorner.endRowControl.RowControl, treeViewControl);
+            //var startIndex = TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl, expanderChildren?.FirstOrDefault());
+            //var endIndex = TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl, expanderChildren?.LastOrDefault());
 
-                    treeNodeAdorner.ReDraw( null , null);
-                    return;
-
-                    if (treeNodeAdorner.EndRowControlIndex >= startIndex
-                        && treeNodeAdorner.EndRowControlIndex <= endIndex
-                        && treeNodeAdorner.StartRowControlIndex <= startIndex
-                         )
-                    {
-                        treeNodeAdorner.ReDraw(isExpandar ? null : startRootControl, null);
-
-                    }
-
-                    // 装饰器  完全包含 折叠项
-                    if (treeNodeAdorner.StartRowControlIndex < startIndex
-                        && treeNodeAdorner.EndRowControlIndex > endIndex)
-                    {
-                        treeNodeAdorner.ReDraw(null, isExpandar ? null : endRootControl);
-                    }
-                    // 折叠项包含 装饰器尾部
-                    else if (treeNodeAdorner.EndRowControlIndex >= startIndex
-                        && treeNodeAdorner.EndRowControlIndex <= endIndex)
-                    {
-
-                        if (treeNodeAdorner.StartRowControlIndex >= startIndex
-                        && treeNodeAdorner.StartRowControlIndex <= endIndex)
-                        {
-                            treeNodeAdorner.ReDrawEmpty(isExpandar);
-                        }
-                        else
-                        {
-                            treeNodeAdorner.ReDraw(null, isExpandar ? null : endRootControl);
-                        }
-                    }
-                    // 折叠项包含 装饰器头部
-                    else if (treeNodeAdorner.StartRowControlIndex >= startIndex
-                        && treeNodeAdorner.StartRowControlIndex <= endIndex
-                        )
-                    {
-
-                        treeNodeAdorner.ReDraw(isExpandar ? null : startRootControl, null);
-                    }
-                }
-            }
-
-
-            return;
-
-
-
-
-
-
-
-
-
-
-
-
-            //var startExpandarNode = TreeViewRowControlHelper.GetNodeByRowControl(expanderChildren?.FirstOrDefault());
-            //var endExpandarNode = TreeViewRowControlHelper.GetNodeByRowControl(expanderChildren?.LastOrDefault());
-
-            //foreach (var treeNodeAdorner in adorners)
+            //foreach (var adorner in adorners)
             //{
-            //    if (treeNodeAdorner is TreeNodeAdorner adorner)
+            //    if (adorner is TreeNodeAdorner treeNodeAdorner)
             //    {
-            //        var startRow = adorner.startRowControl.RowControl;
-            //        var endRow = adorner.endRowControl.RowControl;
-            //        var aa = startRow.ToControlContent();
-            //        var bb = endRow.ToControlContent();
+            //        var startRootControl = TreeViewRowControlHelper.GetRootRowControl(treeNodeAdorner.startRowControl.RowControl, treeViewControl);
+            //        var endRootControl = TreeViewRowControlHelper.GetRootRowControl(treeNodeAdorner.endRowControl.RowControl, treeViewControl);
+
+            //        var a = startRootControl.ToControlContent();
+            //        var b = endRootControl.ToControlContent();
 
 
-            //        var startNode = TreeViewRowControlHelper.GetNodeByRowControl(startRow);
-            //        var endNode = TreeViewRowControlHelper.GetNodeByRowControl(endRow);
-            //        if (startNode == null || endNode == null)
-            //            continue;
-
-            //        var flatList = TreeViewRowControlHelper.FlattenTree(treeViewControl);
-            //        int startIndex = flatList.IndexOf(startNode);
-            //        int endIndex = flatList.IndexOf(endNode);
-            //        int expandStartIndex = flatList.IndexOf(startExpandarNode);
-            //        int expandEndIndex = flatList.IndexOf(endExpandarNode);
-
-            //        if (startIndex == -1 || endIndex == -1 || expandStartIndex == -1 || expandEndIndex == -1)
-            //            continue;
-
-            //        var startFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, startNode) ?? startNode;
-            //        var endFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, endNode) ?? endNode;
-            //        var startRowControlNew = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startFirstUnexpanded);
-            //        var endRowControlNew = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, endFirstUnexpanded);
-
-            //        // UpperPartContain
-            //        if (startIndex < expandStartIndex 
-            //            && endIndex >= expandStartIndex 
-            //            && endIndex <= expandEndIndex)
+            //        // 装饰器  完全包含 折叠项
+            //        if (treeNodeAdorner.StartRowControlIndex < startIndex
+            //            && treeNodeAdorner.EndRowControlIndex > endIndex)
             //        {
-            //            adorner.ReDraw(startRowControlNew, endRowControlNew);
+            //            treeNodeAdorner.ReDraw(null, isExpandar ? null : endRootControl);
             //        }
-            //        //FullContain
-            //        //else if (startIndex > expandStartIndex
-            //        //    && TreeViewElementFinder.IsSmall(treeviewEx, endExpandar, adorner.EndTreeViewExItem, false))
-            //        //{
-            //        //    adorner.RedrawByExpandar(
-            //        //                              startFirstNoExpandarItem,
-            //        //                              endFirstNoExpandarItem
-            //        //                            );
-            //        //}
-            //        //// LowerPartContain
-            //        else if (startIndex >= expandStartIndex && startIndex <= expandEndIndex && endIndex > expandEndIndex)
+            //        // 折叠项包含 装饰器尾部
+            //        else if (treeNodeAdorner.EndRowControlIndex >= startIndex
+            //            && treeNodeAdorner.EndRowControlIndex <= endIndex)
             //        {
-            //            var fallbackStart = isExpandar
-            //                ? startRowControlNew
-            //                : TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startExpandarNode);
 
-            //            adorner.ReDraw(fallbackStart, endRowControlNew);
+            //            if (treeNodeAdorner.StartRowControlIndex >= startIndex
+            //            && treeNodeAdorner.StartRowControlIndex <= endIndex)
+            //            {
+            //                treeNodeAdorner.ReDrawEmpty(isExpandar);
+            //            }
+            //            else
+            //            {
+            //                treeNodeAdorner.ReDraw(null, isExpandar ? null : endRootControl);
+            //            }
             //        }
-            //        // FullContained
-            //        else if (startIndex >= expandStartIndex && endIndex <= expandEndIndex)
+            //        // 折叠项包含 装饰器头部
+            //        else if (treeNodeAdorner.StartRowControlIndex >= startIndex
+            //            && treeNodeAdorner.StartRowControlIndex <= endIndex
+            //            )
             //        {
-            //            adorner.ReDraw(startRowControlNew, endRowControlNew);
-            //        }
-            //        else
-            //        {
-            //            adorner.ReDraw(null, null);
+
+            //            treeNodeAdorner.ReDraw(isExpandar ? null : startRootControl, null);
             //        }
             //    }
             //}
+
+
+            //return;
+
+
+
+            var startExpandarNode = TreeViewRowControlHelper.GetNodeByRowControl(expanderChildren?.FirstOrDefault());
+            var endExpandarNode = TreeViewRowControlHelper.GetNodeByRowControl(expanderChildren?.LastOrDefault());
+
+            foreach (var treeNodeAdorner in adorners)
+            {
+                if (treeNodeAdorner is TreeNodeAdorner adorner)
+                {
+                    var startRow = adorner.startRowControl.RowControl;
+                    var endRow = adorner.endRowControl.RowControl;
+                    var aa = startRow.ToControlContent();
+                    var bb = endRow.ToControlContent();
+
+
+                    var startNode = TreeViewRowControlHelper.GetNodeByRowControl(startRow);
+                    var endNode = TreeViewRowControlHelper.GetNodeByRowControl(endRow);
+                    if (startNode == null || endNode == null)
+                        continue;
+
+                    var flatList = TreeViewRowControlHelper.FlattenTree(treeViewControl);
+                    int startIndex = flatList.IndexOf(startNode);
+                    int endIndex = flatList.IndexOf(endNode);
+                    int expandStartIndex = flatList.IndexOf(startExpandarNode);
+                    int expandEndIndex = flatList.IndexOf(endExpandarNode);
+
+                    if (startIndex == -1 || endIndex == -1 || expandStartIndex == -1 || expandEndIndex == -1)
+                        continue;
+
+                    var startFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, startNode) ?? startNode;
+                    var endFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, endNode) ?? endNode;
+                    var startRowControlNew = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startFirstUnexpanded);
+                    var endRowControlNew = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, endFirstUnexpanded);
+
+                    // UpperPartContain
+                    if (startIndex < expandStartIndex
+                        && endIndex >= expandStartIndex
+                        && endIndex <= expandEndIndex)
+                    {
+                        adorner.ReDraw(startRowControlNew, endRowControlNew);
+                    }
+                    //FullContain
+                    //else if (startIndex > expandStartIndex
+                    //    && TreeViewElementFinder.IsSmall(treeviewEx, endExpandar, adorner.EndTreeViewExItem, false))
+                    //{
+                    //    adorner.RedrawByExpandar(
+                    //                              startFirstNoExpandarItem,
+                    //                              endFirstNoExpandarItem
+                    //                            );
+                    //}
+                    //// LowerPartContain
+                    else if (startIndex >= expandStartIndex && startIndex <= expandEndIndex && endIndex > expandEndIndex)
+                    {
+                        var fallbackStart = isExpandar
+                            ? startRowControlNew
+                            : TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startExpandarNode);
+
+                        adorner.ReDraw(fallbackStart, endRowControlNew);
+                    }
+                    // FullContained
+                    else if (startIndex >= expandStartIndex && endIndex <= expandEndIndex)
+                    {
+                        adorner.ReDraw(startRowControlNew, endRowControlNew);
+                    }
+                    else
+                    {
+                        adorner.ReDraw(null, null);
+                    }
+                }
+            }
 
 
 

@@ -66,11 +66,16 @@ namespace DevTreeview
             {
                 var startRowControl = rowControls[startIndex];
                 var endRowControl = rowControls[targetIndex];
+
+                var startNode = ((TreeViewRowData)startRowControl.DataContext).Node;
+                var endNode = ((TreeViewRowData)endRowControl.DataContext).Node;
+
                 var startSize = BlockTreeHelper.MeasureString(startItem.ToString(), startRowControl.FontSize,startRowControl.FontFamily);
                 var endSize = BlockTreeHelper.MeasureString(endItem.ToString(), endRowControl.FontSize, endRowControl.FontFamily);
 
-                var startRowControlProperty = new RowControlProperty(startRowControl, startItem.ToString(), startSize.Width, startSize.Height);
-                var endRowControlProperty = new RowControlProperty(endRowControl, endItem.ToString(), endSize.Width, endSize.Height);
+                var startRowControlProperty = new RowControlProperty(startRowControl, startNode,startItem.ToString(), startSize.Width, startSize.Height);
+                var endRowControlProperty = new RowControlProperty(endRowControl, endNode, endItem.ToString(), endSize.Width, endSize.Height);
+
                 TreeNodeAdornerHelper.AddLine(treeList, startRowControlProperty, endRowControlProperty);
                 //Trace.WriteLine("End item" + endItem.ToString());
             } 
