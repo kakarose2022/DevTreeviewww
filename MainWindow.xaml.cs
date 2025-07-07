@@ -26,7 +26,7 @@ namespace DevTreeview
         {
             var aa = treeList.GetNodeByRowHandle(0);
             startItem = e.Records[0];
-            Trace.WriteLine("Start item" + startItem.ToString());
+            //Trace.WriteLine("Start item" + startItem.ToString());
         }
 
         private void treeList_DragRecordOver(object sender, DevExpress.Xpf.Core.DragRecordOverEventArgs e)
@@ -72,13 +72,17 @@ namespace DevTreeview
                 var startRowControlProperty = new RowControlProperty(startRowControl, startItem.ToString(), startSize.Width, startSize.Height);
                 var endRowControlProperty = new RowControlProperty(endRowControl, endItem.ToString(), endSize.Width, endSize.Height);
                 TreeNodeAdornerHelper.AddLine(treeList, startRowControlProperty, endRowControlProperty);
-                Trace.WriteLine("End item" + endItem.ToString());
+                //Trace.WriteLine("End item" + endItem.ToString());
             } 
         }
         #endregion
         private void treeList_Loaded(object sender, RoutedEventArgs e)
         {
             ExpandAllNodes(treeList.Nodes);
+
+
+
+
         }
 
         private void ExpandAllNodes(TreeListNodeCollection nodes)
@@ -129,6 +133,11 @@ namespace DevTreeview
                 return rowData?.Node == node;
             });
             var exPanderChildNodes = TreeViewRowControlHelper.GetAllChildRowControls(treeList, node);
+
+            foreach (var item in exPanderChildNodes)
+            {
+                Trace.WriteLine("Redraw  " + item.ToControlContent());
+            }
             TreeNodeAdornerHelper.RedrawAdorners(treeList, exPanderChildNodes, expanderRowControl, isExpanded);
         }
 

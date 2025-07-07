@@ -11,40 +11,29 @@ public static class TreeViewRowControlHelper
 {
     private static readonly Dictionary<TreeViewControl, List<RowControl>> _rowControlCache = new();
 
+
+    public static List<RowControl> GetTreeViewControlRowControls(TreeViewControl treeViewControl)
+    {
+        if (treeViewControl == null)
+            return new List<RowControl>();
+
+        var found = FindVisualChildren<RowControl>(treeViewControl).ToList();
+
+        _rowControlCache[treeViewControl] = found;
+        return found;
+    }
+
+
+
+
+
+
     public static List<RowControl> GetCachedRowControls(TreeViewControl treeViewControl)
     {
         if (treeViewControl == null)
             return new List<RowControl>();
 
-        //if (_rowControlCache.TryGetValue(treeViewControl, out var cached))
-        //{
-        //    if (cached?.Count > 0)
-        //    {
-        //        Trace.WriteLine("--------------");
-        //        foreach (var rowControl in cached)
-        //        {
-        //            Trace.WriteLine(GetRowControlContent(rowControl));
-        //        }
-        //        Trace.WriteLine("--------------");
-
-
-        //        return cached;
-        //    }       
-        //}
-
         var found = FindVisualChildren<RowControl>(treeViewControl).ToList();
-
-        //if (found?.Count > 0)
-        //{
-        //    Trace.WriteLine("--------------");
-        //    foreach (var rowControl in found)
-        //    {
-        //        Trace.WriteLine(GetRowControlContent(rowControl));
-        //    }
-        //    Trace.WriteLine("--------------");
-        //}
-
-
 
         _rowControlCache[treeViewControl] = found;
         return found;
@@ -78,11 +67,45 @@ public static class TreeViewRowControlHelper
         return (rowControl.DataContext as TreeViewRowData)?.Node;
     }
 
-    public static int GetRowControlIndex(TreeViewControl treeViewControl,RowControl rowControl)
+
+    public static List<TreeListNode> FlattenTree(TreeViewControl treeView)
     {
-        var cached = GetCachedRowControls(treeViewControl);
-        return cached.IndexOf(rowControl);
+        var result = new List<TreeListNode>();
+
+        void Traverse(TreeListNode node)
+        {
+            result.Add(node);
+            foreach (var child in node.Nodes)
+                Traverse(child);
+        }
+
+        foreach (var root in treeView.Nodes)
+            Traverse(root);
+
+        return result;
     }
+
+    public static int GetLogicalRowIndex(TreeViewControl treeViewControl, RowControl rowControl)
+    {
+        if (rowControl.DataContext is not TreeViewRowData rowData)
+            return -1;
+
+        var node = rowData.Node;
+        var flatList = FlattenTree(treeViewControl);
+
+        return flatList.IndexOf(node); // 这个 index 是稳定的
+    }
+
+
+
+
+    //public static int GetRowControlIndex(TreeViewControl treeViewControl,RowControl rowControl)
+    //{
+    //    var cached = GetCachedRowControls(treeViewControl);
+    //    var index = cached.IndexOf(rowControl);
+
+    //    return index;
+    //}
 
     public static RowControl? GetRowControlByIndex(int index, TreeViewControl treeViewControl)
     {
@@ -140,9 +163,62 @@ public static class TreeViewRowControlHelper
         return GetRowControlByNode(treeViewControl, currentNode);
     }
 
+    /// <summary>
+    /// 查找包含目标节点的第一个未展开的父节点（从根开始）
+    /// </summary>
+    /// <param name="treeView">TreeViewControl</param>
+    /// <param name="targetNode">目标节点</param>
+    /// <returns>第一个未展开且包含目标节点的父节点</returns>
+    public static TreeListNode? FindFirstUnexpandedParentNode(TreeViewControl treeView, TreeListNode targetNode)
+    {
+        foreach (var root in treeView.Nodes)
+        {
+            var result = FindInNode(root, targetNode);
+            if (result != null)
+                return result;
+        }
+
+        return null;
+    }
+
+    private static TreeListNode? FindInNode(TreeListNode currentNode, TreeListNode targetNode)
+    {
+        if (ContainsNode(currentNode, targetNode))
+        {
+            if (!currentNode.IsExpanded)
+                return currentNode;
+
+            foreach (var child in currentNode.Nodes)
+            {
+                var result = FindInNode(child, targetNode);
+                if (result != null)
+                    return result;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool ContainsNode(TreeListNode parent, TreeListNode target)
+    {
+        if (parent == null || target == null)
+            return false;
+
+        foreach (var child in parent.Nodes)
+        {
+            if (child == target)
+                return true;
+
+            if (ContainsNode(child, target))
+                return true;
+        }
+
+        return false;
+    }
 
 
-    public static string GetRowControlContent(RowControl rowControl)
+
+    public static string ToControlContent(this RowControl rowControl)
     {
 
        var dc= rowControl.DataContext as TreeViewRowData;

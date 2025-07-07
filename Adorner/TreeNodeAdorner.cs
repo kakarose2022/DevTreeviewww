@@ -22,9 +22,9 @@ namespace DevTreeview.Adorner
         private bool ReDrawing = false;
         public RowControlProperty startRowControl;
         public RowControlProperty endRowControl;
-        public int StartRowControlIndex => TreeViewRowControlHelper.GetRowControlIndex(treeViewControl, startRowControl.RowControl);
+        public int StartRowControlIndex => TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl, startRowControl.RowControl);
 
-        public int EndRowControlIndex => TreeViewRowControlHelper.GetRowControlIndex(treeViewControl,endRowControl.RowControl);
+        public int EndRowControlIndex => TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl,endRowControl.RowControl);
 
         [JsonProperty]
         public double LinkMaxWidth;
@@ -70,8 +70,15 @@ namespace DevTreeview.Adorner
             var sRowControl = reDrawStart == null ? startRowControl.RowControl : reDrawStart;
             var eRowControl = reDrawEnd == null ? endRowControl.RowControl : reDrawEnd;
 
-            Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(sRowControl));
-            Trace.WriteLine(TreeViewRowControlHelper.GetRowControlContent(eRowControl));
+            var aaa = startRowControl.RowControl.ToControlContent();
+            var bbb = endRowControl.RowControl.ToControlContent();
+
+            var a = sRowControl.ToControlContent();
+            var b = eRowControl.ToControlContent();
+            var aa = StartRowControlIndex;
+            var bb = EndRowControlIndex;
+
+
 
             var pointElements = new List<PointElement>();
             Point adornedElementPosition = new Point();
@@ -80,7 +87,7 @@ namespace DevTreeview.Adorner
             GetTreeViewItemEndPoint(sRowControl, ref startPoint);
             GetTreeViewItemEndPoint(eRowControl, ref endPoint);
 
-            Trace.WriteLine($"{TreeViewRowControlHelper.GetRowControlContent(endRowControl.RowControl)} :::::::::: endPoint.X: {endPoint.X}, endPoint.Y: {endPoint.Y} ");
+            //Trace.WriteLine($"{TreeViewRowControlHelper.GetRowControlContent(endRowControl.RowControl)} :::::::::: endPoint.X: {endPoint.X}, endPoint.Y: {endPoint.Y} ");
 
             Point rightPoint;
             StartToEndRelativeMaxPoint(sRowControl, eRowControl, ref rightPoint);

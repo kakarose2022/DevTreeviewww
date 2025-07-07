@@ -125,9 +125,9 @@ namespace DevTreeview.Adorner
             GetTreeViewItemEndPoint(StartTreeView, realStartTreeViewItem, ref startPoint);
             GetTreeViewItemEndPoint(EndTreeView, realEndTreeViewItem, ref endPoint);
 
-            Trace.WriteLine($"startPoint.X {startPoint.X} startPoint.Y {startPoint.Y}");
-            Trace.WriteLine($"endPoint.X {endPoint.X} endPoint.Y {endPoint.Y}");
-            Trace.WriteLine($"=====================================");
+            //Trace.WriteLine($"startPoint.X {startPoint.X} startPoint.Y {startPoint.Y}");
+            //Trace.WriteLine($"endPoint.X {endPoint.X} endPoint.Y {endPoint.Y}");
+            //Trace.WriteLine($"=====================================");
 
             if (ReDrawing == false)
             {
