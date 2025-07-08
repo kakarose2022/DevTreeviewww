@@ -20,6 +20,7 @@ namespace DevTreeview.Adorner
         private double OffSetX = 20;
         private double LineSpace = 9;
         private bool ReDrawing = false;
+        public double LinkEndPointX;
         public RowControlProperty startRowControl;
         public RowControlProperty endRowControl;
         public int StartRowControlIndex => TreeViewRowControlHelper.GetLogicalRowIndex(treeViewControl, startRowControl.RowControl);
@@ -32,7 +33,7 @@ namespace DevTreeview.Adorner
 
         public List<LineElement> lineElements { get; }
 
-        public TreeNodeAdorner(RowControlProperty startNode, RowControlProperty endNode, TreeViewControl treeview) : base(startNode.RowControl)
+        public TreeNodeAdorner(RowControlProperty startNode, RowControlProperty endNode, TreeViewControl treeview) : base(endNode.RowControl)
         {
             startRowControl = startNode;
             endRowControl = endNode;
@@ -44,7 +45,7 @@ namespace DevTreeview.Adorner
             InvalidateVisual();
         }
 
-        public void ReDrawByNode(TreeListNode startNode = null, TreeListNode endNode = null)
+        public void ReDrawByNode(TreeListNode startNode , TreeListNode endNode,double calLinkEndPointX = 0)
         {
             ReDrawing = true;
             ClearLines();
@@ -52,15 +53,48 @@ namespace DevTreeview.Adorner
             var startControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startNode);
             var endControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, endNode);
             Trace.WriteLine($"ReDraw  startControl  {startControl.ToControlContent()}  =>  {endControl.ToControlContent()}");
-            CalAndDrawLinePoint(startControl, endControl);
+            CalAndDrawLinePoint(startControl, endControl, calLinkEndPointX);
             InvalidateVisual();
         }
 
-        private void CalAndDrawLinePoint(RowControl reDrawStart = null, RowControl reDrawEnd = null)
+        public void ReCalLinkMaxWidth()
         {
-            var sRowControl = reDrawStart == null ? startRowControl.RowControl : reDrawStart;
-            var eRowControl = reDrawEnd == null ? endRowControl.RowControl : reDrawEnd;
- 
+            var startControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startRowControl.TreeListNode);
+            var endControl = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, endRowControl.TreeListNode);
+            Point startPoint = new Point();
+            Point endPoint = new Point();
+
+            if(startControl == null 
+                || endControl == null)
+            {
+                return;
+            }
+
+            GetTreeViewItemEndPoint(startControl, ref startPoint);
+            GetTreeViewItemEndPoint(endControl, ref endPoint);
+            Point rightPoint;
+            StartToEndRelativeMaxPoint(startControl, endControl, ref rightPoint);
+            LinkMaxWidth = new List<Double> { startPoint.X, endPoint.X, rightPoint.X }.Max();
+            LinkEndPointX = LinkMaxWidth + OffSetX;
+        }
+
+
+        private void CalAndDrawLinePoint(RowControl reDrawStart = null, RowControl reDrawEnd = null, double calLinkEndPointX =0)
+        {
+            RowControl sRowControl = startRowControl.RowControl;
+            RowControl eRowControl = endRowControl.RowControl;
+
+            if (reDrawStart != null || reDrawEnd != null)
+            {
+                 sRowControl = reDrawStart == null ? startRowControl.RowControl : reDrawStart;
+                 eRowControl = reDrawEnd == null ? endRowControl.RowControl : reDrawEnd;
+            }
+
+            if (sRowControl.Equals(eRowControl))
+            {
+                return;
+            }
+
             var pointElements = new List<PointElement>();
             Point adornedElementPosition = new Point();
             Point startPoint = new Point();
@@ -70,15 +104,32 @@ namespace DevTreeview.Adorner
 
             Point rightPoint;
             StartToEndRelativeMaxPoint(sRowControl, eRowControl, ref rightPoint);
-            LinkMaxWidth = new List<Double> { startPoint.X, endPoint.X, rightPoint.X }.Max();
-            var startLink = LinkMaxWidth + OffSetX;
+
+            double tempLinkEndPointX = 0;
+            if (!ReDrawing)
+            {
+                LinkMaxWidth = new List<Double> { startPoint.X, endPoint.X, rightPoint.X }.Max();
+                LinkEndPointX = LinkMaxWidth + OffSetX;
+                tempLinkEndPointX = LinkEndPointX;
+            }
+            else
+            {
+                tempLinkEndPointX = calLinkEndPointX;
+            }
+
+            if (ReDrawing == false && TreeNodeAdornerHelper.HasSameStartAdorners(treeViewControl, startRowControl))
+            {
+                var calMaxLinkEndPointX = TreeNodeAdornerHelper.ReDrawSameStartAdorners(treeViewControl, startRowControl, tempLinkEndPointX);
+                tempLinkEndPointX = calMaxLinkEndPointX;
+            }
+
             if (AdornedElementToTreeViewPoint(ref adornedElementPosition))
             {
                 //开始横线
                 pointElements.Add(new PointElement()
                 {
                     StartPoint = new Point(startPoint.X, startPoint.Y).ToRelativePostion(adornedElementPosition),
-                    EndPoint = new Point(startLink, startPoint.Y).ToRelativePostion(adornedElementPosition),
+                    EndPoint = new Point(tempLinkEndPointX, startPoint.Y).ToRelativePostion(adornedElementPosition),
                     //isTemp = IsTemp,
                 });
 
@@ -86,7 +137,7 @@ namespace DevTreeview.Adorner
                 pointElements.Add(new PointElement()
                 {
                     StartPoint = new Point(endPoint.X, endPoint.Y).ToRelativePostion(adornedElementPosition),
-                    EndPoint = new Point(startLink, endPoint.Y).ToRelativePostion(adornedElementPosition),
+                    EndPoint = new Point(tempLinkEndPointX, endPoint.Y).ToRelativePostion(adornedElementPosition),
                     //isTemp = IsTemp,
                     IsArrow = true
                 });
@@ -94,8 +145,8 @@ namespace DevTreeview.Adorner
                 //竖线
                 pointElements.Add(new PointElement()
                 {
-                    StartPoint = new Point(startLink, startPoint.Y).ToRelativePostion(adornedElementPosition),
-                    EndPoint = new Point(startLink, endPoint.Y).ToRelativePostion(adornedElementPosition),
+                    StartPoint = new Point(tempLinkEndPointX, startPoint.Y).ToRelativePostion(adornedElementPosition),
+                    EndPoint = new Point(tempLinkEndPointX, endPoint.Y).ToRelativePostion(adornedElementPosition),
                     //isTemp = IsTemp,
                 });
             }
@@ -228,7 +279,6 @@ namespace DevTreeview.Adorner
                 }
             }
         }
-
         public void Dispose()
         {
             ClearLines();
@@ -274,7 +324,7 @@ namespace DevTreeview.Adorner
 
         public override string ToString()
         {
-            return $"{startRowControl.RowContent} --->{endRowControl.RowContent}";
+            return $"{startRowControl.RowContent} --->{endRowControl.RowContent}  LinkEndPointX:{ LinkEndPointX}";
         }
         #endregion
     }
@@ -301,23 +351,22 @@ namespace DevTreeview.Adorner
 
         public TreeListNode TreeListNode { get; set; }
 
+        public String RowContent => TreeListNode.Content?.ToString();
 
-        public double TextWidth { get; set; }
-        public double TextHeight { get; set; }
-        public String RowContent{ get; set; }
+        public TextBlock TextBlock { get; set; }
 
-        public RowControlProperty(RowControl rowControl, TreeListNode node, string rowContent ,double textWidht, double textHeight)
+
+        public RowControlProperty(RowControl rowControl, TreeListNode node, TextBlock textBlock)
         {
+            TextBlock = textBlock;
             RowControl = rowControl;
             TreeListNode = node;
-            RowContent = rowContent;
-            TextWidth = textWidht;
-            TextHeight = textHeight;
         }
 
         public override string? ToString()
         {
-            return $"{RowContent} Height: {TextHeight}  Width: {TextWidth}";
+            return $"{RowContent}";
         }
     }
+
 }

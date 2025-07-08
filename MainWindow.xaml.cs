@@ -1,10 +1,12 @@
 ﻿using DevExpress.Xpf.Grid;
 using DevExpress.Xpf.Grid.TreeView;
+using DevExpress.Xpf.PropertyGrid;
 using DevExpress.XtraTreeList;
 using DevTreeview.Adorner;
 using DevTreeview.Core;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using Point = System.Windows.Point;
 
 namespace DevTreeview
@@ -66,18 +68,17 @@ namespace DevTreeview
             {
                 var startRowControl = rowControls[startIndex];
                 var endRowControl = rowControls[targetIndex];
-
                 var startNode = ((TreeViewRowData)startRowControl.DataContext).Node;
                 var endNode = ((TreeViewRowData)endRowControl.DataContext).Node;
+                var startTextBlock = BlockTreeHelper.FindChild<TextBlock>(startRowControl);
+                var endTextBlock = BlockTreeHelper.FindChild<TextBlock>(startRowControl);
 
-                var startSize = BlockTreeHelper.MeasureString(startItem.ToString(), startRowControl.FontSize,startRowControl.FontFamily);
-                var endSize = BlockTreeHelper.MeasureString(endItem.ToString(), endRowControl.FontSize, endRowControl.FontFamily);
 
-                var startRowControlProperty = new RowControlProperty(startRowControl, startNode,startItem.ToString(), startSize.Width, startSize.Height);
-                var endRowControlProperty = new RowControlProperty(endRowControl, endNode, endItem.ToString(), endSize.Width, endSize.Height);
+                var startRowControlProperty = new RowControlProperty(startRowControl, startNode, startTextBlock);
+                var endRowControlProperty = new RowControlProperty(endRowControl, endNode, endTextBlock);
+     
 
-                TreeNodeAdornerHelper.AddLine(treeList, startRowControlProperty, endRowControlProperty);
-                //Trace.WriteLine("End item" + endItem.ToString());
+                TreeNodeAdornerHelper.AddAdorner(treeList, startRowControlProperty, endRowControlProperty, treeList);
             } 
         }
         #endregion
@@ -138,7 +139,7 @@ namespace DevTreeview
             {
                 Trace.WriteLine("Redraw  " + item.ToControlContent());
             }
-            TreeNodeAdornerHelper.RedrawAdorners(treeList, exPanderChildNodes, expanderRowControl, isExpanded);
+            TreeNodeAdornerHelper.RedrawAdorners(treeList,true);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using DevExpress.Xpf.ExpressionEditor.Native;
+﻿using DevExpress.Utils.Design;
+using DevExpress.Xpf.ExpressionEditor.Native;
 using DevExpress.Xpf.Grid;
 using DevExpress.XtraTreeList;
 using DevTreeview.Adorner;
@@ -15,6 +16,8 @@ namespace DevTreeview.Core
 {
     public static class TreeNodeAdornerHelper
     {
+        private const int MiniAdornerInterval = 10;
+
         public static List<System.Windows.Documents.Adorner> GetTreeNodeAdorner(DependencyObject obj)
         {
             return (List<System.Windows.Documents.Adorner>)obj.GetValue(TreeNodeAdornerProperty);
@@ -30,7 +33,7 @@ namespace DevTreeview.Core
             DependencyProperty.RegisterAttached("TreeNodeAdorner", typeof(List<System.Windows.Documents.Adorner>), typeof(TreeNodeAdornerHelper), new PropertyMetadata(null));
 
 
-        public static void AddLine(TreeViewControl treeViewControl, RowControlProperty startRowControl, RowControlProperty endRowControl)
+        public static void AddAdorner(TreeViewControl treeViewControl, RowControlProperty startRowControl, RowControlProperty endRowControl,UIElement uIElement)
         {
             var adornerLayer = AdornerLayer.GetAdornerLayer(treeViewControl);
             if (adornerLayer == null) return;
@@ -49,9 +52,8 @@ namespace DevTreeview.Core
                 adorners = new List<System.Windows.Documents.Adorner>();
             }
             adorners.Add(treeNodeAdorner);
-
-            // 保存回附加属性
             SetTreeNodeAdorner(treeViewControl, adorners);
+            RedrawAdorners(treeViewControl, false);
         }
 
         public static void RemoveAdorner(TreeViewControl treeViewControl, TreeNodeAdorner adornerToRemove)
@@ -67,6 +69,7 @@ namespace DevTreeview.Core
             if (adorners.Remove(adornerToRemove))
             {
                 adornerLayer.Remove(adornerToRemove);
+                RedrawAdorners(treeViewControl,false);
                 SetTreeNodeAdorner(treeViewControl, adorners);
             }
         }
@@ -91,90 +94,165 @@ namespace DevTreeview.Core
             SetTreeNodeAdorner(treeViewControl, null);
         }
 
-
-        public static void RedrawAdorners
-            (
-            TreeViewControl treeViewControl,
-            IEnumerable<RowControl> expanderChildren ,
-            RowControl patientRowControl,
-            bool isExpandar
-            )
+        public static bool HasSameStartAdorners(TreeViewControl treeViewControl, RowControlProperty startRowControl)
         {
-            var adorners =  GetTreeNodeAdorner(treeViewControl);
-            if(adorners == null || !adorners.Any()) return;
-
-            // 折叠的项目
-            var startExpandarNode = TreeViewRowControlHelper.GetNodeByRowControl(expanderChildren?.FirstOrDefault());
-            var endExpandarNode = TreeViewRowControlHelper.GetNodeByRowControl(expanderChildren?.LastOrDefault());
+            var adorners = GetTreeNodeAdorner(treeViewControl);
+            if (adorners == null || !adorners.Any()) return false;
 
             foreach (var treeNodeAdorner in adorners)
             {
                 if (treeNodeAdorner is TreeNodeAdorner adorner)
                 {
-                    //var startRow = adorner.startRowControl.RowControl;
-                    //var endRow = adorner.endRowControl.RowControl;
-                    //var startNode = TreeViewRowControlHelper.GetNodeByRowControl(startRow);
-                    //var endNode = TreeViewRowControlHelper.GetNodeByRowControl(endRow);
+                    if (adorner.startRowControl.TreeListNode.Equals(startRowControl.TreeListNode))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
-                    var startNode = adorner.startRowControl.TreeListNode;
-                    var endNode= adorner.endRowControl.TreeListNode;
+        public static double ReDrawSameStartAdorners(TreeViewControl treeViewControl, RowControlProperty startRowControl, double LinkEndPointX)
+        {
+            var adorners = GetTreeNodeAdorner(treeViewControl);
+            if (adorners == null || !adorners.Any()) return 0;
+            List<double> pointX = new List<double>();
+            pointX.Add(LinkEndPointX);
 
-                    if (startNode == null || endNode == null)
+            foreach (var treeNodeAdorner in adorners)
+            {
+                if (treeNodeAdorner is TreeNodeAdorner adorner)
+                {
+                    if (!adorner.startRowControl.TreeListNode.Equals(startRowControl.TreeListNode))
+                    {
                         continue;
+                    }
+                    pointX.Add(adorner.LinkEndPointX);
+                }
+            }
 
-                    var flatList = TreeViewRowControlHelper.FlattenTree(treeViewControl);
-                    int startIndex = flatList.IndexOf(startNode);
-                    int endIndex = flatList.IndexOf(endNode);
-                    int expandStartIndex = flatList.IndexOf(startExpandarNode);
-                    int expandEndIndex = flatList.IndexOf(endExpandarNode);
-
-                    if (startIndex == -1 || endIndex == -1 || expandStartIndex == -1 || expandEndIndex == -1)
+            var calvalue = pointX.Max();
+            foreach (var treeNodeAdorner in adorners)
+            {
+                if (treeNodeAdorner is TreeNodeAdorner adorner)
+                {
+                    if (!adorner.startRowControl.TreeListNode.Equals(startRowControl.TreeListNode))
+                    {
                         continue;
+                    }
 
-                    var startFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, startNode) ?? startNode;
-                    var endFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, endNode) ?? endNode;
-                    //var startRowControlNew = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, startFirstUnexpanded);
-                    //var endRowControlNew = TreeViewRowControlHelper.GetRowControlByNode(treeViewControl, endFirstUnexpanded);
+                    RedrawAdorner(treeViewControl, adorner, calvalue);
+                }
+            }
+            return calvalue;
+        }
 
-                    adorner.ReDrawByNode(startFirstUnexpanded, endFirstUnexpanded);
-                   
-                    //// UpperPartContain
-                    //if (startIndex < expandStartIndex
-                    //    && endIndex >= expandStartIndex
-                    //    && endIndex <= expandEndIndex)
-                    //{
-                    //    adorner.ReDraw(startFirstUnexpanded, endFirstUnexpanded);
-                    //}
-                    ////FullContain
-                    ////else if (startIndex > expandStartIndex
-                    ////    && TreeViewElementFinder.IsSmall(treeviewEx, endExpandar, adorner.EndTreeViewExItem, false))
-                    ////{
-                    ////    adorner.RedrawByExpandar(
-                    ////                              startFirstNoExpandarItem,
-                    ////                              endFirstNoExpandarItem
-                    ////                            );
-                    ////}
-                    ////// LowerPartContain
-                    //else if (startIndex >= expandStartIndex && startIndex <= expandEndIndex && endIndex > expandEndIndex)
-                    //{
-                    //    var fallbackStart = !isExpandar
-                    //        ? startFirstUnexpanded
-                    //        : startExpandarNode;
 
-                    //    adorner.ReDraw(fallbackStart, endFirstUnexpanded);
-                    //}
-                    //// FullContained
-                    //else if (startIndex > expandStartIndex
-                    //    && endIndex < expandEndIndex)
-                    //{
-                    //    adorner.ReDraw(startFirstUnexpanded, endFirstUnexpanded);
-                    //}
-                    //else
-                    //{
-                    //    adorner.ReDraw(startFirstUnexpanded, endFirstUnexpanded);
-                    //}
+        public static void RedrawAdorners(TreeViewControl treeViewControl,bool isByExpandar)
+        {
+            var adorners =  GetTreeNodeAdorner(treeViewControl);
+            if(adorners == null || !adorners.Any()) return;
+
+            if (isByExpandar)
+            {
+                foreach (var treeNodeAdorner in adorners)
+                {
+                    if (treeNodeAdorner is TreeNodeAdorner adorner)
+                    {
+                        adorner.ReCalLinkMaxWidth();
+                    }
+                }
+            }
+
+            var maxXByStartNode = adorners
+            .OfType<TreeNodeAdorner>()
+            .GroupBy(a => a.startRowControl.TreeListNode)
+            .ToDictionary(
+                g => g.Key, // TreeListNode
+                g => {
+                    var maxX = g.Max(a => a.LinkEndPointX);
+                    var skip = TreeViewRowControlHelper.GetStartEndSkip(treeViewControl,g.First());
+                    return new AdornerDroupDrawInfo(maxX, skip);
+                });
+
+            AdjustAdornerDrawInfoSpacing(maxXByStartNode, MiniAdornerInterval);
+
+            foreach (var treeNodeAdorner in adorners)
+            {
+                if (treeNodeAdorner is TreeNodeAdorner adorner)
+                {
+                    maxXByStartNode.TryGetValue(adorner.startRowControl.TreeListNode, out AdornerDroupDrawInfo adornerDroupDrawInfo);
+                    RedrawAdorner(treeViewControl, adorner, adornerDroupDrawInfo.MaxLinkEndPointX);
                 }
             }
         }
+
+        public static void AdjustAdornerDrawInfoSpacing(
+                Dictionary<TreeListNode, AdornerDroupDrawInfo> infoDict,
+                double minSpacing = MiniAdornerInterval)
+        {
+            // Step 1: 按 Skip 值从小到大排序
+            var sorted = infoDict
+                .OrderBy(kv => kv.Value.StartEndSkip)
+                .ToList();
+
+            double currentX = 0;
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                var node = sorted[i].Key;
+                var info = sorted[i].Value;
+
+                if (i == 0)
+                {
+                    currentX = info.MaxLinkEndPointX;
+                }
+                else
+                {
+                    if (info.MaxLinkEndPointX - currentX < minSpacing)
+                    {
+                        info.MaxLinkEndPointX = currentX + minSpacing;
+                    }
+
+                    currentX = info.MaxLinkEndPointX;
+                }
+
+                // 更新到原字典
+                infoDict[node] = info;
+            }
+        }
+
+
+        public static void RedrawAdorner(TreeViewControl treeViewControl, TreeNodeAdorner adorner, double calLinkEndPointX = 0)
+        {
+            var startNode = adorner.startRowControl.TreeListNode;
+            var endNode = adorner.endRowControl.TreeListNode;
+            var flatList = TreeViewRowControlHelper.FlattenTree(treeViewControl);
+            int startIndex = flatList.IndexOf(startNode);
+            int endIndex = flatList.IndexOf(endNode);
+
+            if (startIndex == -1 || endIndex == -1)
+            {
+                return;
+            }
+
+            var startFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, startNode) ?? startNode;
+            var endFirstUnexpanded = TreeViewRowControlHelper.FindFirstUnexpandedParentNode(treeViewControl, endNode) ?? endNode;
+            adorner.ReDrawByNode(startFirstUnexpanded, endFirstUnexpanded, calLinkEndPointX);
+        }
     }
+
+    public class AdornerDroupDrawInfo
+    {
+        public double MaxLinkEndPointX { get; set; }
+        public int StartEndSkip { get; set; }
+
+        public AdornerDroupDrawInfo(double maxLinkEndPointX, int startEndSkip)
+        {
+            MaxLinkEndPointX = maxLinkEndPointX;
+            StartEndSkip = startEndSkip;
+        }
+    }
+
+
 }

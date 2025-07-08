@@ -16,7 +16,7 @@
     d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
     MouseMove="Window_MouseMove"
     mc:Ignorable="d">
-    <Grid>
+    <Grid x:Name="abc">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition Width="80" />
@@ -45,7 +45,12 @@
                 ShowDragDropHint="False"
                 ShowExpandButtons="True"
                 ShowSearchPanel="False"
-                StartRecordDrag="treeList_StartRecordDrag">
+                StartRecordDrag="treeList_StartRecordDrag"
+                VirtualizingPanel.IsContainerVirtualizable="False"
+                VirtualizingPanel.IsVirtualizing="False"
+                VirtualizingPanel.IsVirtualizingWhenGrouping="False"
+                VirtualizingPanel.ScrollUnit="Pixel"
+                VirtualizingPanel.VirtualizationMode="Standard">
 
                 <dxg:TreeViewControl.NodeContentTemplate>
                     <DataTemplate>

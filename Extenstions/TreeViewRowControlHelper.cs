@@ -1,5 +1,6 @@
 ﻿using DevExpress.Xpf.Grid;
 using DevExpress.Xpf.Grid.TreeView;
+using DevTreeview.Adorner;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,6 +92,13 @@ public static class TreeViewRowControlHelper
         return flatList.IndexOf(node); // 这个 index 是稳定的
     }
 
+    public static int GetStartEndSkip(TreeViewControl treeViewControl, TreeNodeAdorner treeNodeAdorner)
+    {
+        var startIndex = treeNodeAdorner.StartRowControlIndex;
+        var endIndex = treeNodeAdorner.EndRowControlIndex;
+
+        return Math.Abs(startIndex - endIndex);
+    }
 
 
 
